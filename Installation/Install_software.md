@@ -20,6 +20,9 @@ cd /dssg/home/acct-zouyike/share/software
 
 #在默认路径下建立modulefiles文件夹
 mkdir modulefiles
+
+#在.bashrc文件中加入如下一行
+module use /dssg/home/acct-zouyike/share/software/modulefiles
 ```
 
 所有准备工作已经做好！
@@ -55,7 +58,7 @@ set reset "\033\[0m"
 
 setenv g16root "/dssg/home/acct-zouyike/share/software/g16.A03"
 puts stderr "g16root of \${red}g16.A03\$reset is set"
-puts stderr "\t* add \$green source \$g16root/g16/bsd/g16.profile \$reset to you job scripts"
+puts stderr "\t* add \$green source \\\$g16root/g16/bsd/g16.profile \$reset to you job scripts"
 
 conflict g16
 EOF
