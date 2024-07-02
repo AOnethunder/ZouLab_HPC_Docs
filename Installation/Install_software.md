@@ -1,22 +1,64 @@
 # 安装纪录
 
-## 1. Gaussian（高斯）:压缩包 E6B-113X_AVX2.tbz
+## 0. 以下软件安装路径全部默认为在主账户（zouyike）家目录的上一级目录的*share/software*目录下
 
-1.1 在期望安装的文件夹中解压压缩包
+如果是**PI 2.0**，这个路径为 `/lustre/home/acct-zouyike/share/software`
+
+如果是**思源一号**，这个路径为 `/dssg/home/acct-zouyike/share/software`
+
+如果要在相应集群（PI 2.0/思源一号）安装一个所有子账户都要使用的软件，只能安装在上面相应的路径下才能使大家都有权限使用。
+
+**0.1 建议在群上使用Module包管理安装的软件，这样不会使得.bashrc文件变得混乱：**
+
+首先在默认安装路径下建立一个存放module files的文件夹，切换到默认安装路径下：
 
 ```bash
-tar jxvf E6B-113X_AVX2.tbz
+# 思源一号
+cd /dssg/home/acct-zouyike/share/software
+# 如果是PI 2.0，运行下一行命令
+#cd /lustre/home/acct-zouyike/share/software
+
+#在默认路径下建立modulefiles文件夹
+mkdir modulefiles
 ```
 
-1.2 准备Gaussian计算环境的配置文件
+所有准备工作已经做好！
+
+## 1. Gaussian（高斯）:压缩包 E6B-113X_AVX2.tbz
+
+1.1 假设在默认安装路径下已经有安装包，在默认安装路径下解压压缩包
 
 ```bash
-cat >gaussianEnv<<EOF
-#!/bin/bash
-export g16root=/lustre/home/acct-zouyike/zouyike/software
-source \$g16root/g16/bsd/g16.profile
-EOF
+# 切换到默认安装路径，思源一号：
+cd /dssg/home/acct-zouyike/share/software
+# 如果是PI 2.0，运行下一行命令
+#cd /lustre/home/acct-zouyike/share/software
 
+# 压缩包为g16 A03版本，新建一个文件夹
+mkdir g16.A03
+# 解压文件到g16.A03/中
+tar jxvf E6B-113X_AVX2.tbz -C g16.A03
+```
+
+1.2 准备Gaussian环境的module files文件
+
+```bash
+# 为g16建立 modulefiles
+mkdir -p modulefiles/g16
+
+cat >modulefiles/g16/A03<<EOF
+#%Module
+
+set red "\033\[1;31m"
+set green "\033\[1;32m"
+set reset "\033\[0m"
+
+setenv g16root "/dssg/home/acct-zouyike/share/software/g16.A03"
+puts stderr "g16root of \${red}g16.A03\$reset is set"
+puts stderr "\t* add \$green source \$g16root/g16/bsd/g16.profile \$reset to you job scripts"
+
+conflict g16
+EOF
 ```
 
 安装完成，下面是简单提交任务测试。
