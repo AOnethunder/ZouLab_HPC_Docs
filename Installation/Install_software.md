@@ -419,7 +419,7 @@ make install
 
 ```
 
-5.4 把生成的modulefile复制到专门存放modulefile的文件夹(此处为默认安装路径下的modulefiles/plumed)中，用于设定软件运行环境
+5.4 把生成的modulefile复制到专门存放modulefile的文件夹(此处为默认安装路径下的modulefiles/plumed)中，用于设定软件运行环境,同时加上设置PLUMED_ROOT的代码
 
 ```bash
 # 切换到默认安装路径，思源一号：
@@ -429,6 +429,12 @@ cd /dssg/home/acct-zouyike/share/software
 
 mkdir -p modulefiles/plumed
 cp plumed/plumed-2.9.0/lib/plumed/modulefile modulefiles/plumed/2.9.0
+
+# 在modulefiles中设置PLUMED_ROOT变量，在安装Amber 22/24的时候要用到
+sed -i $\a'#set PLUMED_ROOT for Amber 22 or 24 installation\nsetenv PLUMED_ROOT '`realpath plumed/plumed-2.9.0` modulefiles/plumed/2.9.0
+
+# 安装完成后删除解压的源代码文件夹
+rm -r plumed-2.9.0/
 ```
 
 ## 6. Lio (貌似安装不了，暂不安装！)
@@ -458,7 +464,7 @@ make cuda=1 cpu=0
 
 amber 22和24的安装方法基本上一样，安装的时候路径需要进行相应的修改而且有些BUG在Amber 24不用另外打补丁了
 
-注意：如果要使**Amber24**具有xtb和DFTB+的功能，最好先把按照前面3和4的安装步骤把xtb和DFTB+安装完成
+注意：如果要使**Amber24**具有XTB和DFTB+的功能，最好先把按照前面3和4的安装步骤把XTB和DFTB+安装完成
 
 7.0 切换到默认安装路径：
 
@@ -469,59 +475,89 @@ cd /dssg/home/acct-zouyike/share/software
 #cd /lustre/home/acct-zouyike/share/software
 ```
 
-**7.1 申请交互作业结点（PI 2.0集群和思源一号集群申请的命令稍微有点区别）**
+**7.1 申请交互作业结点（PI 2.0集群和思源一号集群申请的命令有区别）**
 
 ```bash
-srun -p cpu -n 40 --exclusive --pty /bin/bash   #PI 2.0
+# 思源一号：
+srun -p 64c512g -n 64 --exclusive --pty /bin/bash
+# 如果是PI 2.0，运行下一行申请交互操作资源
+# srun -p cpu -n 40 --exclusive --pty /bin/bash
+
+# 加载 gcc 11.2.0
 module load gcc/11.2.0
+
+# 加载合适的cmake版本-3.21.4 (在思源一号上使用系统自带的cmake 3.20.2安装dftbplus库时会报错)
+module load cmake/3.21.4-gcc-11.2.0
 ```
 
 **7.2 下载源码包并解压 (官网下载源码)**
 
 ```bash
-tar jxvf AmberTools23.tar.bz2
-tar jxvf Amber22.tar.bz2    #amber24需要改成24对应的软件包
+# Amber 24, 解压后会有一个文件夹amber24_src/
+tar jxvf AmberTools24.tar.bz2
+tar jxvf Amber24.tar.bz2
+# 进入Amber 24源代码文件夹
+cd amber24_src/
+
+# Amber 22运行如下命令，解压后会有一个文件夹amber22_src/
+#tar jxvf AmberTools23.tar.bz2
+#tar jxvf Amber22.tar.bz2
+# 进入Amber 22源代码文件夹
+#cd amber22_src/
 ```
 
-**7.3 Amber源码补丁更新（不然安装parmed会报错，amber24不用打补丁，发行方已经更正好了）**
+**7.3 Amber源码补丁更新（不然Amber 22安装parmed会报错；Amber 24不用打补丁，发行方已经更正好了,直接跳过这步）**
 
 ```bash
-cp amber22.patch amber22_src/
-cd amber22_src/    #amber24 只运行这一行，注意路径名
+cp ../amber22.patch ./
 patch -p1 < amber22.patch
 ```
 
-**7.4 设置第三方库环境变量（如PLUMED, 需要自己额外安装PLUMED）**
+**7.4 设置第三方库环境变量（如PLUMED等, 需要自己额外安装PLUMED）**
 
 ```bash
-#amber22运行以下命令加载plumed环境（plumed需要提前安装，参考上面plumed安装过程，这个文件没有加载cuda，后面安装gpu版本的时候要加载cuda）
-source ../amberplumed.sh
-
-#amber24运行以下命令加载环境（包括cuda,plumed,dftbplus和xtb，plumed,dftbplus和xtb需要提前安装，参考上面PLUMED,DFTB+和XTB的安装过程）
-# module load plumed/2.9.0
-# module load cuda/11.8.0
-# module load xtb/6.7.0_amber24 #确保设置了XTB_ROOT变量，不然编译不能编译或者直接运行下一行
+# Amber 24运行以下命令加载环境（包括cuda,plumed,dftbplus,openblas和xtb，plumed,dftbplus和xtb需要提前安装，参考上面PLUMED,DFTB+和XTB的安装过程）
+module load plumed/2.9.0
+module load cuda/11.8.0
+module load xtb/6.7.0_amber24 #确保设置了XTB_ROOT变量，不然不能编译xtb的库。如没有设置可以直接运行下一行设置变量，把路径换成你的xtb安装路径就行
 ## export XTB_ROOT=/lustre/home/acct-zouyike/luoshenggan/software/xtb/xtb-amber24
-# module load dftbplus/24.1_amber24
+module load dftbplus/24.1_amber24
+module load openblas/0.3.24
+
+# 安装Amber 22只需加载plumed和cuda环境（plumed需要提前安装，参考上面plumed安装过程），运行以下命令
+#module load plumed/2.9.0
+#module load cuda/11.8.0
+#module load openblas/0.3.23-gcc-8.5.0 #加载openblas库
 ```
 
-**7.5 安装 (更新补丁-加上-DBUILD_QUICK=TRUE运行cmake后安装)**
+**7.5 安装 (Amber 22加上-DBUILD_QUICK=TRUE运行cmake后安装)**
 
-amber24额外加上-DUSE_XTB=TRUE -DBUILD_TCPB=TRUE -DLIBTORCH=TRUE -DUSE_DFTBPLUS=TRUE
+Amber24额外加上-DUSE_XTB=TRUE -DBUILD_TCPB=TRUE -DLIBTORCH=TRUE -DUSE_DFTBPLUS=TRUE
 
 ```bash
+# Amber 24
 cd build/
-cp ../../runcmakeBuild22.patch .  #amber24运行 cp ../../runcmakeBuild24.patch .
-patch < runcmakeBuild22.patch     #amber24运行 patch < runcmakeBuild24.patch
+cp ../../runcmakeBuild24.patch ./
+patch < runcmakeBuild24.patch
 ./run_cmake
-
 make install
+
+# Amber 22 运行以下命令
+#cd build/
+#cp ../../runcmakeBuild22.patch ./
+#patch < runcmakeBuild22.patch   
+#./run_cmake
+#make install
 ```
 
 **7.6 初始化Amber测试环境**
 
 ```bash
-source ../../amber22/amber.sh   #amer24注意路径
+# Amer 24
+source ../../amber24/amber.sh
+
+# Amber 22
+#source ../../amber22/amber.sh   
 ```
 
 **7.7 串行CPU版本测试**
