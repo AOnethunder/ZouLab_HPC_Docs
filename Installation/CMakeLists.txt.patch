@@ -1,0 +1,11 @@
+--- ../CMakeLists.txt	2024-04-30 01:47:47.000000000 +0800
++++ CMakeLists.txt	2024-07-05 17:35:26.328444303 +0800
+@@ -21,6 +21,8 @@
+ # flag to submodules to tell them to not run their own version of AmberCmakeConfig
+ set(INSIDE_AMBER TRUE)
+ 
++# Patching this to ignore the checkout of CUB, or the installation may be not success
++add_compile_definitions(THRUST_IGNORE_CUB_VERSION_CHECK)
+ 
+ # host tools options
+ #---------------------------------------------------------------------------------------------------------------------------------------------------------------------

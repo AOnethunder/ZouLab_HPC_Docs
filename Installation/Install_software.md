@@ -498,6 +498,9 @@ tar jxvf AmberTools24.tar.bz2
 tar jxvf Amber24.tar.bz2
 # 进入Amber 24源代码文件夹
 cd amber24_src/
+# 在思源一号上安装GPU版本报错，打上补丁。PI 2.0也有可能报错，最好也打补丁
+cp ../CMakeLists.txt.patch ./
+patch < CMakeLists.txt.patch
 
 # Amber 22运行如下命令，解压后会有一个文件夹amber22_src/
 #tar jxvf AmberTools23.tar.bz2
@@ -828,7 +831,6 @@ cd amber24
 # 提交测试作业
 sbatch ../doAmberTest.slm
 ```
-
 
 ## 8. Tcl-ChemShell
 
