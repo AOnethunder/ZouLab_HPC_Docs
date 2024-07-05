@@ -816,7 +816,7 @@ make test.parallel
 
 ```bash
 #切换到默认安装路径，思源一号：
-cd cd /dssg/home/acct-zouyike/share/software
+cd /dssg/home/acct-zouyike/share/software
 # PI 2.0
 #cd /lustre/home/acct-zouyike/share/software
 
@@ -825,7 +825,7 @@ cd amber24
 # Amber 22
 #cd amber22
 
-# 提交作业脚本
+# 提交测试作业
 sbatch ../doAmberTest.slm
 ```
 
