@@ -820,8 +820,13 @@ cd cd /dssg/home/acct-zouyike/share/software
 # PI 2.0
 #cd /lustre/home/acct-zouyike/share/software
 
+# Amber 24
+cd amber24
+# Amber 22
+#cd amber22
+
 # 提交作业脚本
-sbatch doAmberTest.slm
+sbatch ../doAmberTest.slm
 ```
 
 
