@@ -1,0 +1,42 @@
+#!/bin/bash
+
+#SBATCH --job-name=amber24test
+##测试GPU：下面的队列名如果是PI 2.0设为dgx2, 思源一号设为a100或a800。如果测试CPU，队列名PI 2.0设为cpu,思源一号设为64c512g
+#SBATCH --partition=64c512g
+#SBATCH -N 1
+#SBATCH -n 12
+#SBATCH --ntasks-per-node=12
+#如果是GPU队列，把下面一行的注释去掉（开头只保留一下#，串行测试把gpu后面的数字设为1，并行gpu测试把数字设为2）
+##SBATCH --gres=gpu:2
+#SBATCH --output=%j.out
+#SBATCH --error=%j.err
+
+module load plumed/2.9.0
+module load cuda/11.8.0
+# 如果思源一号
+module load openblas/0.3.24
+# 如果PI 2.0
+#module load openblas/0.3.23-gcc-8.5.0
+
+source amber.sh
+
+# Amber 24 mpi xtb dftb+ setting
+module load xtb/6.7.0_amber24
+module load dftbplus/24.1_amber24
+export `mpirun env | grep OMPI_MCA_orte_precondition_transports`
+
+# Amber 22 mpi setting
+#export OMPI_MCA_btl=^openib
+
+# Amber 22 24都需要在CPU队列运行下面的CPU测试命令。测试时去掉下面的注释
+make test.serial
+export DO_PARALLEL="mpirun -np 2"
+make test.parallel
+export DO_PARALLEL="mpirun -np 4"
+make test.parallel
+
+# Amber 22 24都需要在GPU队列运行下面的GPU测试命令。测试时去掉下面的注释
+#export CUDA_VISIBLE_DEVICES=0
+#make test.cuda.serial
+#export CUDA_VISIBLE_DEVICES=0,1
+#make test.cuda.parallel

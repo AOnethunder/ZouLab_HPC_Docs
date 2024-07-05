@@ -486,7 +486,7 @@ srun -p 64c512g -n 64 --exclusive --pty /bin/bash
 # 加载 gcc 11.2.0
 module load gcc/11.2.0
 
-# 加载合适的cmake版本-3.21.4 (在思源一号上使用系统自带的cmake 3.20.2安装dftbplus库时会报错)
+# 加载合适的cmake版本-3.21.4 (在思源一号上使用系统自带的cmake 3.20.2和3.26.5版本安装dftbplus库时会报错)
 module load cmake/3.21.4-gcc-11.2.0
 ```
 
@@ -516,21 +516,25 @@ patch -p1 < amber22.patch
 **7.4 设置第三方库环境变量（如PLUMED等, 需要自己额外安装PLUMED）**
 
 ```bash
+# 加载openblas库，PI 2.0和思源一号预装的版本加载方式不一样
+# 思源一号：
+module load openblas/0.3.24
+# PI 2.0:
+#module load openblas/0.3.23-gcc-8.5.0
+
 # Amber 24运行以下命令加载环境（包括cuda,plumed,dftbplus,openblas和xtb，plumed,dftbplus和xtb需要提前安装，参考上面PLUMED,DFTB+和XTB的安装过程）
 module load plumed/2.9.0
 module load cuda/11.8.0
 module load xtb/6.7.0_amber24 #确保设置了XTB_ROOT变量，不然不能编译xtb的库。如没有设置可以直接运行下一行设置变量，把路径换成你的xtb安装路径就行
 ## export XTB_ROOT=/lustre/home/acct-zouyike/luoshenggan/software/xtb/xtb-amber24
 module load dftbplus/24.1_amber24
-module load openblas/0.3.24
 
 # 安装Amber 22只需加载plumed和cuda环境（plumed需要提前安装，参考上面plumed安装过程），运行以下命令
 #module load plumed/2.9.0
 #module load cuda/11.8.0
-#module load openblas/0.3.23-gcc-8.5.0 #加载openblas库
 ```
 
-**7.5 安装 (Amber 22加上-DBUILD_QUICK=TRUE运行cmake后安装)**
+**7.5 安装 (Amber 22和24的run_cmake文件加上-DBUILD_QUICK=TRUE运行cmake后安装)**
 
 Amber24额外加上-DUSE_XTB=TRUE -DBUILD_TCPB=TRUE -DLIBTORCH=TRUE -DUSE_DFTBPLUS=TRUE
 
@@ -550,7 +554,7 @@ make install
 #make install
 ```
 
-**7.6 初始化Amber测试环境**
+**7.6 初始化Amber测试环境（可以跳过7.6 7.7，在所有版本的安装完成后统一测试）**
 
 ```bash
 # Amer 24
@@ -563,8 +567,27 @@ source ../../amber24/amber.sh
 **7.7 串行CPU版本测试**
 
 ```bash
+# 加载openblas库，PI 2.0和思源一号预装的版本加载方式不一样
+# 思源一号：
+module load openblas/0.3.24
+# PI 2.0:
+#module load openblas/0.3.23-gcc-8.5.0
+
+# Amber 24
+# 加载plumed,xtb,dftbplus,openblas和cuda等Amber 24运行需要的环境
+module load plumed/2.9.0
+module load cuda/11.8.0
+module load xtb/6.7.0_amber24
+module load dftbplus/24.1_amber24
 cd $AMBERHOME
-make test.serial   # ~ 1.5 h   amber24注意加载xtb,dftbplus环境来测试xtb和dftbplus QM/MM接口
+make test.serial
+
+# Amber 22
+# 加载plumed,cuda和openblas等Amber 22运行需要的环境
+#module load plumed/2.9.0
+#module load cuda/11.8.0
+#cd $AMBERHOME
+#make test.serial   # ~ 1.5 h
 ```
 
 **在确保大部分串行CPU测试通过时再编译串行GPU版本**
@@ -572,57 +595,91 @@ make test.serial   # ~ 1.5 h   amber24注意加载xtb,dftbplus环境来测试xtb
 **7.8 串行GPU版本编译，加载CUDA环境**
 
 ```bash
-module load cuda/11.8.0   #amber24在上面已经加载过cuda/11.8.0了，可以不运行，运行也无妨
-cd ../amber22_src/build   #amber24注意路径名  cd ../amber24_src/build/
+# Amber 24
+module load cuda/11.8.0
+# 如果你手动测试串行CPU版本（也就是运行了7.6和7.7）,那么需要运行下一行命令回到Amber 24的编译路径。如果打算以脚本方式测试，那么不用运行下一行
+cd ../amber24_src/build/
+
+# Amber 22
+#module load cuda/11.8.0
+# 如果你手动测试串行CPU版本（也就是运行了7.6和7.7）,那么需要运行下一行命令回到Amber 22的编译路径。如果打算以脚本方式测试，那么不用运行下一行
+#cd ../amber22_src/build
 ```
 
 **7.9 编辑run_cmake文件，把-DCUDA=FALSE选项设为-DCUDA=TRUE后保存**
 
 ```bash
+# Amber 22/24都需要修改这个文件
 vi run_cmake
 ```
 
 **7.10 编译和安装串行GPU版本**
 
 ```bash
+# Amber 22/24都需要运行以下命令
 ./run_cmake
 make install    # ~ 2 h
 ```
 
-**7.11 测试串行GPU版本**
+**7.11 测试串行GPU版本，如果在GPU结点编译，可以直接运行下面的测试步骤，如果在CPU结点编译，跳过这步，后面以作业脚本的方式提交测试**
 
 ```bash
+# 加载openblas库，PI 2.0和思源一号预装的版本加载方式不一样
+# 思源一号：
+module load openblas/0.3.24
+# PI 2.0:
+#module load openblas/0.3.23-gcc-8.5.0
+
+# Amber 24
+source ../../amber24/amber.sh
+# 加载plumed,xtb,dftbplus,openblas和cuda等Amber 24运行需要的环境
+module load plumed/2.9.0
+module load cuda/11.8.0
+module load xtb/6.7.0_amber24
+module load dftbplus/24.1_amber24
+
+# Amber 22
+#source ../../amber22/amber.sh
+#module load plumed/2.9.0
+#module load cuda/11.8.0
+
+# Amber 22/24 都需要运行以下命令
 cd $AMBERHOME
-
 export CUDA_VISIBLE_DEVICES=0
-make test.cuda.serial           # ~ 20 min
-
+make test.cuda.serial   
 ```
 
-注意：因为在CPU结点编译的串行GPU版本，你需要将上面的测试命令放到作业脚本并用sbatch命令提交到GPU结点上运行。**并且需要在测试作业脚本中设置好AMBER的环境（PLUMED库，source amber.sh等等）**
+注意：在CPU结点编译的串行GPU版本，你需要将上面的测试命令放到作业脚本并用sbatch命令提交到GPU结点上运行。**并且需要在测试作业脚本中设置好AMBER的环境（PLUMED库，source amber.sh等等）**
 
 **在确保大部分串行GPU测试通过再编译并行CPU版本**
 
 **7.12 编译openmpi,下载openmpi软件包到相应的文件夹中并利用amber提供的脚本进行编译**
 
 ```bash
-# amber 22
-cd ../amber22_src/AmberTools/src/    #注意：手册上写的路径是错误的！
-wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.6.tar.bz2  
-tar jxvf openmpi-4.1.6.tar.bz2
+# Amber24 安装5.0.1
+# 如果跳过了7.11，则运行下一行命令切换路径,否则不运行
+cd ../AmberTools/src/    #注意：手册上写的路径是错误的！
+# 如果运行了7.11，则运行下一行命令切换路径，否则不运行
+cd ../amber24_src/AmberTools/src/   #注意：手册上写的路径是错误的！
+wget https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-5.0.1.tar.bz2
+tar jxvf openmpi-5.0.1.tar.bz2
 
-#amber24 安装5.0.1
-# cd ../amber24_src/AmberTools/src/
-# wget https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-5.0.1.tar.bz2
-# tar jxvf openmpi-5.0.1.tar.bz2
+# amber 22 安装4.1.6
+# 如果跳过了7.11，则运行下一行命令切换路径,否则不运行
+#cd ../AmberTools/src/
+# 如果运行了7.11，则运行下一行命令切换路径，否则不运行
+#cd ../amber22_src/AmberTools/src/    #注意：手册上写的路径是错误的！
+#wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.6.tar.bz2  
+#tar jxvf openmpi-4.1.6.tar.bz2
 
-#amber22或24安装openmpi
+# Amber22和24都需要运行下面命令安装openmpi
 ./configure_openmpi -static -np 4 gnu   # ~ 15 min
 ```
 
 **7.13 编辑run_cmake文件把-DMPI=FALSE设为-DMPI=TRUE并且-DCUDA=TRUE设为-DCUDA=FALSE**
 
 ```bash
+# Amber 22/24都需要运行以下命令
 cd ../../build
 vi run_cmake
 ```
@@ -630,39 +687,58 @@ vi run_cmake
 **7.14 编译和安装CPU并行版本**
 
 ```bash
+# Amber 22/24都需要运行以下命令
 ./run_cmake
 make install
 ```
 
-**7.15 测试CPU并行版本（最好以作业脚本的形式提交-注意加载plumed，xtb(amber24), dftbplus(amber24)及openmpi环境变量设定）**
+**7.15 测试CPU并行版本（以作业脚本的形式提交-注意加载plumed，xtb(amber24), dftbplus(amber24),openblas及openmpi环境变量设定）**
 
 openmpi 4.x及5.0.1运行需要设定特殊的环境变量
 
 ```bash
+# plumed, xtb, dftbplus, cuda, openblas等请参照7.11
+
+# Amber 24
+source ../../amber24/amber.sh
 cd $AMBERHOME
-source amber.sh
-export OMPI_MCA_btl=^openib    #openmpi环境变量（amber22）amber24安装的是openmpi5.0.1,应该不用设定这个环境变量？
-#amber24应设定下一行：
-# export `mpirun env | grep OMPI_MCA_orte_precondition_transports`
+export `mpirun env | grep OMPI_MCA_orte_precondition_transports`
+
+# Amber 22
+#source ../../amber22/amber.sh
+#cd $AMBERHOME
+#export OMPI_MCA_btl=^openib    #openmpi环境变量（amber22）
+
+# Amber 22/24都需要运行以下命令
 export DO_PARALLEL="mpirun -np 2" #2个线程并行
 make test.parallel
-
-export DO_PARALLEL="mpirun -np 4"
+export DO_PARALLEL="mpirun -np 4" #4个线程并行
 make test.parallel
 ```
+
+注：**直接在交互结点上运行上述测试任务会出问题，还是用脚本提交测试！**
 
 大部分CPU并行版本测试通过再编译GPU并行版本
 
 **7.16 编辑run_cmake文件，把-DCUDA=FALSE设为-DCUDA=TRUE**
 
 ```bash
-cd ../amber22_src/build   #amber24运行  cd ../amber24_src/build
+# Amber 24
+# 如果运行了7.15,运行下一行命令切换路径，否则不运行
+cd ../amber24_src/build
+
+# Amber 22
+# 如果运行了7.15,运行下一行命令切换路径，否则不运行
+cd ../amber22_src/build   
+
+# Amber 22/24都需要运行以下命令
 vi run_cmake
 ```
 
 **7.17 编译GPU并行版本**
 
 ```bash
+# Amber 22/24都需要运行以下命令
 ./run_cmake
 make install
 ```
@@ -670,14 +746,84 @@ make install
 **7.18 测试GPU并行版本(以作业脚本的形式提交，注意plumed，xtb(amber24), dftbplus(amber24)环境和openmpi的环境的设置)**
 
 ```bash
+# plumed, xtb, dftbplus, cuda, openblas等请参照7.11
+
+# Amber 24
+source ../../amber24/amber.sh
 cd $AMBERHOME
-source amber.sh
-export OMPI_MCA_btl=^openib    #openmpi环境变量
-#amber24应设定下一行：
-# export `mpirun env | grep OMPI_MCA_orte_precondition_transports`
+export `mpirun env | grep OMPI_MCA_orte_precondition_transports`
+
+# Amber 22
+#source ../../amber22/amber.sh
+#cd $AMBERHOME
+#export OMPI_MCA_btl=^openib    #openmpi环境变量（amber22）
+
+# Amber 22/24都需要运行以下命令
 export DO_PARALLEL="mpirun -np 2" #2个线程并行
 make test.cuda.parallel
 ```
+
+直接在命令行上提交会出现问题，还是以作业脚本的方式提交！
+
+**7.19 统一提交作业测试Amber（如果跳过了前面直接在命令行上的测试或者出现报错）。把所有测试步骤放到一个作业脚本中doAmberTest.slm，这个脚本有如下内容**
+
+```bash
+#!/bin/bash
+
+#SBATCH --job-name=amber24test
+##测试GPU：下面的队列名如果是PI 2.0设为dgx2, 思源一号设为a100或a800。如果测试CPU，队列名PI 2.0设为cpu,思源一号设为64c512g
+#SBATCH --partition=64c512g
+#SBATCH -N 1
+#SBATCH -n 12
+#SBATCH --ntasks-per-node=12
+#如果是GPU队列，把下面一行的注释去掉（开头只保留一下#，串行测试把gpu后面的数字设为1，并行gpu测试把数字设为2）
+##SBATCH --gres=gpu:2
+#SBATCH --output=%j.out
+#SBATCH --error=%j.err
+
+module load plumed/2.9.0
+module load cuda/11.8.0
+# 如果思源一号
+module load openblas/0.3.24
+# 如果PI 2.0
+#module load openblas/0.3.23-gcc-8.5.0
+
+source amber.sh
+
+# Amber 24 mpi xtb dftb+ setting
+module load xtb/6.7.0_amber24
+module load dftbplus/24.1_amber24
+export `mpirun env | grep OMPI_MCA_orte_precondition_transports`
+
+# Amber 22 mpi setting
+#export OMPI_MCA_btl=^openib
+
+# Amber 22 24都需要在CPU队列运行下面的CPU测试命令。测试时去掉下面的注释
+make test.serial
+export DO_PARALLEL="mpirun -np 2"
+make test.parallel
+export DO_PARALLEL="mpirun -np 4"
+make test.parallel
+
+# Amber 22 24都需要在GPU队列运行下面的GPU测试命令。测试时去掉下面的注释
+#export CUDA_VISIBLE_DEVICES=0
+#make test.cuda.serial
+#export CUDA_VISIBLE_DEVICES=0,1
+#make test.cuda.parallel
+```
+
+把脚本放到默认安装路径中，进入AMBERHOME提交测试作业
+
+```bash
+#切换到默认安装路径，思源一号：
+cd cd /dssg/home/acct-zouyike/share/software
+# PI 2.0
+#cd /lustre/home/acct-zouyike/share/software
+
+# 提交作业脚本
+sbatch doAmberTest.slm
+```
+
 
 ## 8. Tcl-ChemShell
 
