@@ -56,15 +56,15 @@ set red "\033\[1;31m"
 set green "\033\[1;32m"
 set reset "\033\[0m"
 
-setenv g16root "/dssg/home/acct-zouyike/share/software/g16.A03"
+setenv g16root `realpath g16.A03`
 puts stderr "g16root of \${red}g16.A03\$reset is set"
-puts stderr "\t* add \$green source \\\$g16root/g16/bsd/g16.profile \$reset to you job scripts"
+puts stderr "\t* add \$green source \\\$g16root/g16/bsd/g16.profile \$reset to your job scripts"
 
 conflict g16
 EOF
 ```
 
-安装完成，下面是简单提交任务测试。
+安装完成，下面提交简单任务测试。
 
 1.3 准备好高斯输入文件，假设有高斯计算任务(文件名为 test.com)。
 
@@ -160,7 +160,7 @@ cd /dssg/home/acct-zouyike/share/software
 # 如果是PI 2.0，运行下一行命令
 #cd /lustre/home/acct-zouyike/share/software
 
-# 申请交互操作资源
+# 申请交互操作资源，思源一号：
 srun -p 64c512g -n 4 --pty /bin/bash
 # 如果是PI 2.0，运行下一行申请交互操作资源
 # srun -p cpu -n 4 --pty /bin/bash
@@ -464,7 +464,7 @@ make cuda=1 cpu=0
 
 amber 22和24的安装方法基本上一样，安装的时候路径需要进行相应的修改而且有些BUG在Amber 24不用另外打补丁了
 
-注意：如果要使**Amber24**具有XTB和DFTB+的功能，最好先把按照前面3和4的安装步骤把XTB和DFTB+安装完成
+注意：如果要使**Amber24**具有XTB和DFTB+的功能，最好先按照前面3和4的安装步骤把XTB和DFTB+安装完成
 
 7.0 切换到默认安装路径：
 
@@ -661,7 +661,8 @@ make test.cuda.serial
 ```bash
 # Amber24 安装5.0.1
 # 如果跳过了7.11，则运行下一行命令切换路径,否则不运行
-cd ../AmberTools/src/    #注意：手册上写的路径是错误的！
+cd ../AmberTools/src    #注意：手册上写的路径是错误的！
+source ../../../amber24/amber.sh
 # 如果运行了7.11，则运行下一行命令切换路径，否则不运行
 cd ../amber24_src/AmberTools/src/   #注意：手册上写的路径是错误的！
 wget https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-5.0.1.tar.bz2
@@ -669,9 +670,10 @@ tar jxvf openmpi-5.0.1.tar.bz2
 
 # amber 22 安装4.1.6
 # 如果跳过了7.11，则运行下一行命令切换路径,否则不运行
-#cd ../AmberTools/src/
+cd ../AmberTools/src
+source ../../../amber22/amber.sh
 # 如果运行了7.11，则运行下一行命令切换路径，否则不运行
-#cd ../amber22_src/AmberTools/src/    #注意：手册上写的路径是错误的！
+cd ../amber22_src/AmberTools/src/    #注意：手册上写的路径是错误的！
 #wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.6.tar.bz2  
 #tar jxvf openmpi-4.1.6.tar.bz2
 
