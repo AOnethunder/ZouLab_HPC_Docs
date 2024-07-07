@@ -774,7 +774,7 @@ make test.cuda.parallel
 
 直接在命令行上提交会出现问题，还是以作业脚本的方式提交！
 
-**注：**Amber 24的最新补丁有问题，在AMBERHOME目录下安装了miniconda2次，第一次是安装最新版3.12，第二次安装3.11，检查了一下，3.12安装mpi4py失败，3.11安装成功。但是它把两个版本的python安装在同一个目录导致AMBERHOME目录下的miniconda目录很混乱。能用就行，不打算改Bug了。
+注：Amber 24安装时如果跳过7.3中手动更新源代码而让cmake自动更新补丁时会出问题，就是在AMBERHOME目录下安装了miniconda2次，第一次是安装最新版3.12，第二次安装3.11，检查了一下发现3.12安装mpi4py失败，3.11安装成功。但是它把两个版本的python安装在同一个目录导致AMBERHOME目录下的miniconda目录很混乱。能用就行，不打算改Bug了。
 
 修改AMBERHOME目录下的amber.sh文件使mpi4py可用：
 
