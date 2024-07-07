@@ -509,9 +509,13 @@ patch < CMakeLists.txt.patch
 #cd amber22_src/
 ```
 
-**7.3 Amber源码补丁更新（不然Amber 22安装parmed会报错；Amber 24不用打补丁，发行方已经更正好了,直接跳过这步）**
+**7.3 Amber源码补丁更新（不然Amber 22安装parmed会报错；Amber 24手动更新源码，不然会安装两遍minoconda）**
 
 ```bash
+# Amber 24
+./update_amber --update #运行此行时请确保加载了Python
+
+# Amber 22
 cp ../amber22.patch ./
 patch -p1 < amber22.patch
 ```
@@ -769,7 +773,6 @@ make test.cuda.parallel
 ```
 
 直接在命令行上提交会出现问题，还是以作业脚本的方式提交！
-
 
 **注：**Amber 24的最新补丁有问题，在AMBERHOME目录下安装了miniconda2次，第一次是安装最新版3.12，第二次安装3.11，检查了一下，3.12安装mpi4py失败，3.11安装成功。但是它把两个版本的python安装在同一个目录导致AMBERHOME目录下的miniconda目录很混乱。能用就行，不打算改Bug了。
 
