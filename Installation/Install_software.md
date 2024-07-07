@@ -812,7 +812,7 @@ source amber.sh
 # Amber 24 mpi xtb dftb+ setting
 module load xtb/6.7.0_amber24
 module load dftbplus/24.1_amber24
-export `mpirun env | grep OMPI_MCA_orte_precondition_transports`
+export `mpirun env | grep OMPI_MCA_orte_precondition_transports` # 在PI 2.0上需要加上这一行
 
 # Amber 22 mpi setting
 #export OMPI_MCA_btl=^openib
