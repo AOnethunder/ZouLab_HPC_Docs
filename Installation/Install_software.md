@@ -773,7 +773,7 @@ make test.cuda.parallel
 
 **注：**Amber 24的最新补丁有问题，在AMBERHOME目录下安装了miniconda2次，第一次是安装最新版3.12，第二次安装3.11，检查了一下，3.12安装mpi4py失败，3.11安装成功。但是它把两个版本的python安装在同一个目录导致AMBERHOME目录下的miniconda目录很混乱。能用就行，不打算改Bug了。
 
-修改AMBERHOME目录下的amber.sh文件使mpi4py能用：
+修改AMBERHOME目录下的amber.sh文件使mpi4py可用：
 
 ```bash
 # 把下面两行
@@ -827,6 +827,7 @@ make test.parallel
 # Amber 22 24都需要在GPU队列运行下面的GPU测试命令。测试时去掉下面的注释
 #export CUDA_VISIBLE_DEVICES=0
 #make test.cuda.serial
+#export DO_PARALLEL="mpirun -np 2"
 #export CUDA_VISIBLE_DEVICES=0,1
 #make test.cuda.parallel
 ```
@@ -846,6 +847,49 @@ cd amber24
 
 # 提交测试作业
 sbatch ../doAmberTest.slm
+```
+
+7.20 准备Amber 22和24的module file文件
+
+```bash
+# 切换到默认安装路径，思源一号：
+cd /dssg/home/acct-zouyike/share/software
+# 如果是PI 2.0，运行下一行命令
+#cd /lustre/home/acct-zouyike/share/software
+
+# Amber 24运行下面的命令准备module files
+mkdir -p modulefiles/amber
+cat > modulefiles/amber/24 <<EOF
+#%Module
+
+set red "\033\[1;31m"
+set green "\033\[1;32m"
+set reset "\033\[0m"
+
+setenv AMBERHOME `realpath amber24`
+puts stderr "AMBERHOME of amber \${red}24\$reset is set"
+puts stderr "\t* add \$green source \\\$AMBERHOME/amber.sh \$reset to you job scripts"
+puts stderr "\t* and may be need to add \$green export \`mpirun env | grep OMPI_MCA_orte_precondition_transports\` \$reset to MPI jobs"
+
+conflict amber
+EOF
+
+# Amber 22运行下面的命令准备module files
+mkdir -p modulefiles/amber
+cat > modulefiles/amber/22 <<EOF
+#%Module
+
+set red "\033\[1;31m"
+set green "\033\[1;32m"
+set reset "\033\[0m"
+
+setenv AMBERHOME `realpath amber22`
+puts stderr "AMBERHOME of amber \${red}22\$reset is set"
+puts stderr "\t* add \$green source \\\$AMBERHOME/amber.sh \$reset to you job scripts"
+puts stderr "\t* and may be need to add \$green export OMPI_MCA_btl=^openib \$reset to MPI jobs"
+
+conflict amber
+EOF
 ```
 
 ## 8. Tcl-ChemShell
@@ -903,4 +947,25 @@ make
 cd ../examples/
 ./run_validation.tcsh
 
+```
+
+8.4 准备chemsh的module file文件
+
+```bash
+# 切换到默认安装路径，思源一号：
+cd /dssg/home/acct-zouyike/share/software
+# 如果是PI 2.0，运行下一行命令
+#cd /lustre/home/acct-zouyike/share/software
+
+#运行下面的命令准备module files文件
+mkdir -p modulefiles/chemsh
+cat > modulefiles/chemsh/3.7.1 <<EOF
+#%Module 
+
+prepend-path PATH `realpath chemsh/chemsh-3.7.1/bin`
+prepend-path PATH `realpath chemsh/chemsh-3.7.1/scripts`
+prepend-path LD_LIBRARY_PATH `realpath chemsh/chemsh-3.7.1/lib`
+
+conflict chemsh
+EOF
 ```
