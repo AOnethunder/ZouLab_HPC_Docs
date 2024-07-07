@@ -770,6 +770,20 @@ make test.cuda.parallel
 
 直接在命令行上提交会出现问题，还是以作业脚本的方式提交！
 
+
+**注：**Amber 24的最新补丁有问题，在AMBERHOME目录下安装了miniconda2次，第一次是安装最新版3.12，第二次安装3.11，检查了一下，3.12安装mpi4py失败，3.11安装成功。但是它把两个版本的python安装在同一个目录导致AMBERHOME目录下的miniconda目录很混乱。能用就行，不打算改Bug了。
+
+修改AMBERHOME目录下的amber.sh文件使mpi4py能用：
+
+```bash
+# 把下面两行
+export PYTHONPATH="$AMBERHOME/lib/python3.12/site-packages"
+export PYTHONPATH="$AMBERHOME/lib/python3.12/site-packages:$PYTHONPATH"
+# 分别修改为
+export PYTHONPATH="$AMBERHOME/lib/python3.11/site-packages"
+export PYTHONPATH="$AMBERHOME/lib/python3.11/site-packages:$PYTHONPATH"
+```
+
 **7.19 统一提交作业测试Amber（如果跳过了前面直接在命令行上的测试或者出现报错）。把所有测试步骤放到一个作业脚本中doAmberTest.slm，这个脚本有如下内容**
 
 ```bash
@@ -836,25 +850,35 @@ sbatch ../doAmberTest.slm
 
 ## 8. Tcl-ChemShell
 
-8.1 安装Tcl，假设你已经在~/software目录下
+8.1 安装Tcl，假设你已经在上面所说的默认安装目录下
 
 ```bash
-mkdir tcl
-mv tcl8.5.11-src.tar.gz tcl
-cd tcl/
+# 切换到默认安装路径，思源一号：
+cd /dssg/home/acct-zouyike/share/software
+# 如果是PI 2.0，运行下一行命令
+#cd /lustre/home/acct-zouyike/share/software
+
+# 思源一号：
+srun -p 64c512g -n 64 --exclusive --pty /bin/bash
+# 如果是PI 2.0，运行下一行申请交互操作资源
+# srun -p cpu -n 40 --exclusive --pty /bin/bash
+
+mkdir -p tcl/tcl-8.5.11 #新建tcl-8.5.11作为安装路径
 tar zxvf tcl8.5.11-src.tar.gz  #生成一个新的文件夹 tcl8.5.11
-mkdir tcl-8.5.11 #新建tcl-8.5.11作为安装路径
 cd tcl8.5.11/unix/
-./configure --prefix=/lustre/home/acct-zouyike/luoshenggan/software/tcl/tcl-8.5.11   #指定了刚刚新建的用于安装的路径
+./configure --prefix=`realpath ../../tcl/tcl-8.5.11`   #指定了刚刚新建的用于安装的路径
 make
 make install
+cd ../../
+rm -rf tcl8.5.11/ #删除解压的源码文件夹
+
 #设置tcl环境变量用于安装 chemshell
-export TCLROOT=/lustre/home/acct-zouyike/luoshenggan/software/tcl/tcl-8.5.11
-export LIBTCL=/lustre/home/acct-zouyike/luoshenggan/software/tcl/tcl-8.5.11/lib/libtcl8.5.so
+export TCLROOT=`realpath tcl/tcl-8.5.11`
+export LIBTCL=`realpath tcl/tcl-8.5.11/lib/libtcl8.5.so`
 
 ```
 
-8.2 安装chemshell，假设你已经在~/software目录下
+8.2 安装chemshell，假设你已经在默认安装目录下
 
 ```bash
 mkdir chemsh
@@ -862,6 +886,8 @@ mv chemsh-3.7.1.tar.gz chemsh
 cd chemsh/
 tar zxvf chemsh-3.7.1.tar.gz
 cd chemsh-3.7.1/src/config/
+
+module unload gcc/11.2.0  #unload gcc/11.2.0,使用系统自带的gcc
 
 export CC=gcc
 export F77=gfortran
