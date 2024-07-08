@@ -38,5 +38,6 @@ make test.parallel
 # Amber 22 24都需要在GPU队列运行下面的GPU测试命令。测试时去掉下面的注释
 #export CUDA_VISIBLE_DEVICES=0
 #make test.cuda.serial
+#export DO_PARALLEL="mpirun -np 2"
 #export CUDA_VISIBLE_DEVICES=0,1
 #make test.cuda.parallel
