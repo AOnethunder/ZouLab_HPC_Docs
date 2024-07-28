@@ -79,8 +79,6 @@ sbatch slm_g16_test.sh  #提交高斯作业
 
 ## 2. RoseTTAFold-All-Atom 
 
-注：
-
 2.1 进入默认安装目录并安装Mamba
 
 ```bash
