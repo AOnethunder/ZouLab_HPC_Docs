@@ -77,14 +77,26 @@ sbatch slm_g16_test.sh  #提交高斯作业
 
 1.5 结束后将会得到计算结果文件（test.log）及一些其他的输出文件。
 
-## 2. RoseTTAFold-All-Atom (还没有安装)
+## 2. RoseTTAFold-All-Atom 
 
-2.1 进入software/文件夹并安装Mamba
+注：
+
+2.1 进入默认安装目录并安装Mamba
 
 ```bash
-cd software/
+# 切换到默认安装路径，思源一号：
+cd /dssg/home/acct-zouyike/share/software
+# 如果是PI 2.0，运行下一行命令
+#cd /lustre/home/acct-zouyike/share/software
+
+# 申请交互操作资源，思源一号：
+srun -p 64c512g -n 16 --pty /bin/bash
+# 如果是PI 2.0，运行下一行申请交互操作资源
+# srun -p cpu -n 16 --pty /bin/bash
+
 wget "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"
-bash Mambaforge-$(uname)-$(uname -m).sh  # install to the location "/lustre/home/acct-zouyike/zouyike/software/mambaforge"
+bash Mambaforge-$(uname)-$(uname -m).sh  # install to the location "/dssg/home/acct-zouyike/share/software/mambaforge" in sylogin
+					 # or the location "/lustre/home/acct-zouyike/share/software/mambaforge" in pilogin
 #rm Mambaforge-$(uname)-$(uname -m).sh  # (optionally) remove installer after using it
 source ~/.bashrc  # alternatively, one can restart their shell session to achieve the same result
 ```
@@ -148,6 +160,17 @@ tar xfz bfd_metaclust_clu_complete_id30_c90_final_seq.sorted_opt.tar.gz -C ./bfd
 # structure templates (including *_a3m.ffdata, *_a3m.ffindex)
 wget https://files.ipd.uw.edu/pub/RoseTTAFold/pdb100_2021Mar03.tar.gz #本地下载
 tar xfz pdb100_2021Mar03.tar.gz
+```
+
+2.8 下载BLAST
+
+```bash
+wget https://ftp.ncbi.nlm.nih.gov/blast/executables/legacy.NOTSUPPORTED/2.2.26/blast-2.2.26-x64-linux.tar.gz
+mkdir -p blast-2.2.26
+tar -xf blast-2.2.26-x64-linux.tar.gz -C blast-2.2.26
+cp -r blast-2.2.26/blast-2.2.26/ blast-2.2.26_bk
+rm -r blast-2.2.26
+mv blast-2.2.26_bk/ blast-2.2.26
 ```
 
 ## 3. XTB
