@@ -1,0 +1,42 @@
+// 把test.mdb改为你要保存的mdb文件名
+db_name = 'test.mdb';
+db_key = db_Open [db_name, 'create'];
+db_CreateField [db_name, 'SMILEs', 'char'];
+db_CreateField [db_name, 'cappedSMILEs', 'char'];
+
+//修改 test.txt 为你的SMILES文件，使未封端的SMILES在单独的一列，把10改为文件的总行数
+s = freadb['test.txt', 'line', 10];
+
+for i=1, length s, 1 loop
+	entrykey = db_Write[db_name, 0, [SMILEs:s(i)]];
+	
+	a = sm_Build token s(i);
+	MM [];
+	at = cat sm_MatchAtoms ['NCC=O', a];
+	
+	// get H => N
+	mask = aElement at == 'N';
+	N = at | mask;
+	HN = cat aBonds N;
+	HN = HN | aElement HN == 'H';
+	HN = HN(1);
+	sm_Build ['[H]C(C([H])([H])[H])=O', HN];
+	MM [];
+	// get O => C=O => OH and delete H of OH
+	mask2 = aElement at == 'O';
+	O = at | mask2;
+	CO = cat aBonds aBonds O;
+	mask3 = CO <> O;
+	mask4 = aElement CO == 'O';
+	CO = CO | (mask3 and mask4);
+	HO = mget[cat aBonds CO, aElement cat aBonds CO == 'H'];
+	//oDestroy HO;
+	sm_Build ['[H]N(C([H])([H])[H])[H]', CO];
+	MM [];
+	
+	cappedSML = sm_ExtractUnique Atoms[];
+	
+	Close[force:1];
+	
+	entrykey = db_Write[db_name, entrykey, [cappedSMILEs:string cappedSML]];
+endloop
